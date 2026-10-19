@@ -1,0 +1,15 @@
+# Normalise line endings so the project behaves the same on Windows, Linux, and macOS.
+* text=auto eol=lf
+
+# Binary assets must not be converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+
+# Minified vendor files are generated; keep them as-is.
+static/vendor/* text eol=lf

@@ -1,0 +1,19 @@
+# Render deployment blueprint for the Prompt-Based Information Extraction System.
+# Commit this file, connect the repository on https://render.com, and Render will
+# read the build and start commands below automatically.
+services:
+  - type: web
+    name: prompt-information-extractor
+    runtime: python
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13.5"
+      - key: FLASK_DEBUG
+        value: "0"

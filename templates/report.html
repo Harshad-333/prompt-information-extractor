@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Experiment Report | Prompt-Based Information Extraction System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="app-header no-print">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">R</div>
+          <div>
+            <h1>Experiment Report</h1>
+            <p class="subtitle">Prompt Engineering and Structured Output Generation</p>
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <a class="btn btn-outline-light btn-sm" href="{{ url_for('index') }}">Back to Application</a>
+          <button type="button" class="btn btn-light btn-sm" onclick="window.print()">Print / Save as PDF</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container py-4">
+    <div class="disclaimer mb-4">{{ disclaimer }}</div>
+
+    <article class="panel">
+      <div class="panel-body">
+        <h1 class="h4 mb-1">Prompt-Based Information Extraction System</h1>
+        <p class="text-muted mb-3">MCA Practical Examination &middot; Prompt Engineering and Structured Output Generation</p>
+
+        <table class="field-table mb-4">
+          <tbody>
+            <tr><th scope="row" style="width:180px">Student</th><td>Harshad Babulal Imale</td></tr>
+            <tr><th scope="row">Course</th><td>Master of Computer Applications (MCA)</td></tr>
+            <tr><th scope="row">College</th><td>DKTE Society's Textile &amp; Engineering Institute, Ichalkaranji</td></tr>
+            <tr><th scope="row">Examination</th><td>Practical Examination</td></tr>
+            <tr><th scope="row">Subject</th><td>Prompt Engineering and Structured Output Generation</td></tr>
+            <tr><th scope="row">Maximum marks</th><td>25</td></tr>
+            <tr><th scope="row">Engine</th><td>{{ engine_name }} v{{ engine_version }} (no external AI API)</td></tr>
+          </tbody>
+        </table>
+
+        <h2 class="h5 mt-4">1. Experiment Title</h2>
+        <p>Prompt-Based Information Extraction System: structured prompt design, deterministic extraction, and JSON schema validation.</p>
+
+        <h2 class="h5 mt-4">2. Aim</h2>
+        <p>To design a structured prompt and build a web application that converts an unstructured workshop paragraph into a validated five-field JSON object, correctly representing missing information as <code>null</code> or <code>[]</code>.</p>
+
+        <h2 class="h5 mt-4">3. Objectives</h2>
+        <ol>
+          <li>Design two structured prompts: Standard Extraction and Missing-Information-Safe Extraction.</li>
+          <li>Implement a deterministic extraction engine that needs no external AI API key.</li>
+          <li>Produce a JSON object with exactly five fields: title, date, venue, speaker, topics.</li>
+          <li>Represent missing scalar values as <code>null</code> and missing topics as <code>[]</code>.</li>
+          <li>Validate JSON syntax and schema independently with clear error messages.</li>
+          <li>Test complete, incomplete, and sparse paragraphs and report actual results.</li>
+          <li>Document the work and prepare it for GitHub publication and deployment.</li>
+        </ol>
+
+        <h2 class="h5 mt-4">4. Problem Statement</h2>
+        <p>Workshop announcements are written as free-form prose. The same facts appear in different orders and phrasings, and some facts are often missing. Extracting those facts manually is slow and inconsistent. A naive extractor may invent a venue or convert "next month" into a false calendar date. The problem is to extract only supported facts and to represent everything else honestly.</p>
+
+        <h2 class="h5 mt-4">5. Software and Hardware Requirements</h2>
+        <div class="table-responsive">
+          <table class="table diff-table align-middle">
+            <thead><tr><th scope="col">Type</th><th scope="col">Requirement</th></tr></thead>
+            <tbody>
+              <tr><td>Operating system</td><td>Windows 10/11, Linux, or macOS</td></tr>
+              <tr><td>Language</td><td>Python 3.10 or newer (developed with Python 3.14)</td></tr>
+              <tr><td>Backend</td><td>Flask 3.x</td></tr>
+              <tr><td>Frontend</td><td>HTML5, CSS3, JavaScript, Bootstrap 5 (vendored locally)</td></tr>
+              <tr><td>Validation</td><td>Python standard library <code>json</code> plus a custom schema validator</td></tr>
+              <tr><td>Testing</td><td>pytest</td></tr>
+              <tr><td>Browser</td><td>Any modern browser (Chrome, Edge, Firefox, Safari)</td></tr>
+              <tr><td>Hardware</td><td>Any laptop with 4 GB RAM; no GPU required</td></tr>
+              <tr><td>Network</td><td>Not required at runtime; no external AI service is called</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 class="h5 mt-4">6. Theory</h2>
+        <p><strong>Prompt engineering</strong> is the discipline of writing precise instructions for an AI system. A structured prompt defines the role, the task, the evidence rule, the output schema, and the policy for missing data.</p>
+        <p><strong>Context engineering</strong> is selecting the information supplied to the system. Here the context is the paragraph, the five-field schema, and the rule "extract only explicitly supported information".</p>
+        <p><strong>Structured output</strong> means returning machine-readable JSON with fixed keys rather than free text. This makes the result testable and storable.</p>
+        <p><strong>Missing information</strong> is represented with JSON <code>null</code> (and <code>[]</code> for topics). This distinguishes "not available" from an empty or invented value.</p>
+        <p><strong>Validation</strong> has two layers. Syntax validation checks that the text parses as JSON. Schema validation checks keys, types, date format, and topic contents. Passing one does not imply passing the other.</p>
+        <p><strong>Important distinction:</strong> the prompts in this project are structured specifications. The default extraction is performed by a deterministic rule-based Python engine, not by a language model. The application does not claim that a model executed the prompt.</p>
+
+        <h2 class="h5 mt-4">7. Algorithm</h2>
+        <ol>
+          <li>Accept the paragraph and the selected prompt mode.</li>
+          <li>Reject empty input, over-length input, or an unsupported mode with a clear error.</li>
+          <li>Normalise whitespace and typographic characters.</li>
+          <li>Split the paragraph into sentences, protecting abbreviations such as "Dr.".</li>
+          <li>Extract the date with ordered patterns (ISO, day-month-year, month-day-year). Reject invalid, partial, relative, and ambiguous dates.</li>
+          <li>Extract the title using verb patterns and a sentence-level event phrase. Apply documented specificity rules for the selected mode.</li>
+          <li>Extract the venue only from explicit venue phrases. Optionally qualify it with an explicitly stated host institution and city.</li>
+          <li>Extract the speaker only from a named-person pattern. Reject role-only and "not announced" references.</li>
+          <li>Extract topics after an explicit cue such as "will cover" or "topics include", splitting on commas and "and".</li>
+          <li>Build the five-field object with <code>null</code> / <code>[]</code> for absent values.</li>
+          <li>Validate syntax, then validate the schema, then return the result with evidence and notes.</li>
+        </ol>
+
+        <h2 class="h5 mt-4">8. System Workflow</h2>
+        <pre class="json-viewer" style="min-height:auto">Browser (Bootstrap UI)
+      |
+      |  POST /api/extract  { paragraph, mode }
+      v
+Flask route (app.py) -- input validation
+      |
+      v
+Extraction engine (extractor.py) -- rule-based, deterministic
+      |
+      v
+Five-field dict -- json.dumps
+      |
+      v
+Validator (validator.py) -- syntax check, then schema check
+      |
+      v
+JSON response -- UI renders JSON, pills, evidence, notes</pre>
+
+        <h2 class="h5 mt-4">9. Sample Input</h2>
+        <div class="test-input">DKTE Society's Textile &amp; Engineering Institute, Ichalkaranji, will organize the Introduction to Generative AI and Prompt Engineering Workshop on 15 November 2026 in the Seminar Hall. Dr. Ananya Deshmukh will be the speaker. The workshop will cover Prompt Design, Structured JSON Output, Context Engineering, and AI Output Validation.</div>
+
+        <h2 class="h5 mt-4">10. Structured Prompt</h2>
+        <p>The Standard Extraction prompt contains nine explicit instructions, the output schema, field rules, and the source paragraph. See the Prompt Lab tab for both full prompts and a readable comparison.</p>
+        <pre class="prompt-box">You are an information-extraction component. Your only task is to convert the SOURCE PARAGRAPH below into one JSON object that follows the OUTPUT SCHEMA.
+
+INSTRUCTIONS
+1. Read the supplied paragraph carefully before extracting anything.
+2. Extract only information that is explicitly supported by the paragraph.
+3. Identify the workshop title, date, venue, speaker, and topics.
+4. Return a JSON object with exactly these predefined field names: title, date, venue, speaker, topics.
+5. Represent every missing or unavailable scalar value as null.
+6. Represent topics as an array of strings.
+7. Never invent details, infer a speaker, or fill gaps using assumptions.
+8. Return JSON only, without Markdown code fences or explanatory text.
+9. Follow the defined output schema exactly. Do not add extra keys.
+
+OUTPUT SCHEMA
+{ "title": string | null, "date": "YYYY-MM-DD" | null, "venue": string | null,
+  "speaker": string | null, "topics": [string] }
+
+SOURCE PARAGRAPH
+"{{ '{{PARAGRAPH}}' }}"
+
+Return the JSON object now.</pre>
+
+        <h2 class="h5 mt-4">11. Expected JSON Output</h2>
+        <pre class="json-viewer">{
+  "title": "Introduction to Generative AI and Prompt Engineering Workshop",
+  "date": "2026-11-15",
+  "venue": "Seminar Hall, DKTE Society's Textile & Engineering Institute, Ichalkaranji",
+  "speaker": "Dr. Ananya Deshmukh",
+  "topics": [
+    "Prompt Design",
+    "Structured JSON Output",
+    "Context Engineering",
+    "AI Output Validation"
+  ]
+}</pre>
+
+        <h2 class="h5 mt-4">12. Missing-Information Handling</h2>
+        <p>For the paragraph "The college will conduct a Python programming workshop on 20 December 2026. Students will learn file handling and exception handling.", the venue and speaker are not stated. The engine returns <code>null</code> for both. It does not turn "the college" into a venue, and it does not invent a speaker. For "A technical workshop will be organized next month. The speaker has not been announced.", the relative date, generic title, venue, speaker, and topics all remain null / empty.</p>
+
+        <h2 class="h5 mt-4">13. Test Case Table</h2>
+        <div class="table-responsive">
+          <table class="table diff-table align-middle">
+            <thead><tr><th scope="col">Test</th><th scope="col">Input focus</th><th scope="col">Mode</th><th scope="col">Expected outcome</th></tr></thead>
+            <tbody>
+              {% for scenario in scenarios %}
+              <tr>
+                <td><strong>{{ scenario.name }}</strong></td>
+                <td>{{ scenario.description }}</td>
+                <td><code>{{ scenario.mode }}</code></td>
+                <td>All five fields populated</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="form-hint">Actual results are produced by the Test Suite tab and by <code>py -m pytest -v</code>. This page does not contain fabricated results.</p>
+
+        <h2 class="h5 mt-4">14. Validation Results</h2>
+        <p>Validation is reported in two independent layers. The application displays a syntax pill and a schema pill for every extraction, plus each individual schema check. The pytest suite covers invalid JSON, missing keys, extra keys, wrong types, invalid dates, invalid topics, malformed API requests, and the health endpoint.</p>
+
+        <h2 class="h5 mt-4">15. Screenshots</h2>
+        <p>Screenshots are captured from the running application. See the <code>screenshots/</code> folder and the instructions in the README. Suggested captures:</p>
+        <ol>
+          <li>Extractor tab with the sample paragraph and populated output.</li>
+          <li>Missing-information notes for the Python workshop paragraph.</li>
+          <li>Prompt Lab comparison.</li>
+          <li>Test Suite with all three tests passing.</li>
+          <li>Schema &amp; Validation tab showing an invalid example.</li>
+        </ol>
+
+        <h2 class="h5 mt-4">16. Result</h2>
+        <p>The application starts successfully, extracts the required fields from the complete paragraph, returns <code>null</code> for genuinely missing values, rejects ambiguous and relative dates, and validates both syntax and schema. Automated tests are executed with pytest and the actual outcome is recorded in <code>docs/TEST_RESULTS.md</code>.</p>
+
+        <h2 class="h5 mt-4">17. Limitations</h2>
+        <ul>
+          <li>Rule-based extraction covers common announcement patterns, not arbitrary language.</li>
+          <li>Indirect or implicit statements may produce <code>null</code> even when a human could infer the value.</li>
+          <li>The engine does not resolve relative dates such as "next month" by design.</li>
+          <li>No database is used; each request is processed in memory.</li>
+          <li>No authentication is included, because the application is a single-user practical demonstration.</li>
+        </ul>
+
+        <h2 class="h5 mt-4">18. Future Scope</h2>
+        <ul>
+          <li>Add an optional, environment-configured LLM adapter with independent response validation.</li>
+          <li>Support multiple event types and additional schema fields.</li>
+          <li>Export records to CSV or a database.</li>
+          <li>Add multi-paragraph batch extraction.</li>
+          <li>Add confidence calibration and a reviewer approval step.</li>
+        </ul>
+
+        <h2 class="h5 mt-4">19. Conclusion</h2>
+        <p>The experiment demonstrates that a well-specified structured prompt and a transparent deterministic engine can produce reliable, schema-valid JSON from unstructured text. Representing missing values as <code>null</code> and separating syntax validation from schema validation makes the output honest and testable.</p>
+
+        <h2 class="h5 mt-4">20. Viva Questions with Answers</h2>
+        <div class="table-responsive">
+          <table class="table diff-table align-middle">
+            <thead><tr><th scope="col">Question</th><th scope="col">Answer</th></tr></thead>
+            <tbody>
+              <tr><td>What is prompt engineering?</td><td>Writing precise instructions that define the task, context, constraints, and output format for an AI system.</td></tr>
+              <tr><td>What is structured-output prompting?</td><td>Asking for a fixed machine-readable format, such as JSON with named fields, instead of free text.</td></tr>
+              <tr><td>Why use JSON?</td><td>It is language-independent, easy to parse, and easy to validate.</td></tr>
+              <tr><td>Why use null instead of "N/A"?</td><td><code>null</code> is a distinct JSON type meaning "no value". "N/A" is a string that could be mistaken for real data.</td></tr>
+              <tr><td>Difference between syntax and schema validation?</td><td>Syntax checks that the text parses as JSON. Schema checks that the parsed object has the required keys, types, and value formats.</td></tr>
+              <tr><td>Does this project use an LLM?</td><td>No. The default engine is deterministic and rule-based. The prompt is a specification. An optional LLM adapter is not enabled.</td></tr>
+              <tr><td>How is hallucination reduced?</td><td>Evidence-only rules, explicit pattern matching, null defaults, and independent validation.</td></tr>
+              <tr><td>Why is "next month" returned as null?</td><td>It is relative and has no unambiguous calendar date. Converting it would invent information.</td></tr>
+              <tr><td>What is context engineering?</td><td>Deciding what information and instructions to provide so the system has exactly the relevant context.</td></tr>
+              <tr><td>Why keep the schema fixed?</td><td>Comparability, testability, and predictable downstream processing.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <footer class="app-footer no-print">
+    <div class="container">
+      <p class="mb-1"><strong>Harshad Babulal Imale</strong> &middot; MCA &middot; DKTE Society's Textile &amp; Engineering Institute, Ichalkaranji</p>
+      <p class="mb-0 footer-line">Prompt-Based Information Extraction System &middot; Engine: {{ engine_name }} v{{ engine_version }}</p>
+    </div>
+  </footer>
+</body>
+</html>
